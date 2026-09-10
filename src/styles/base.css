@@ -1,0 +1,26 @@
+/* 基线层：跨引擎一致性 + 表单重置。
+   设计层（tokens/组件样式）在 App.vue，晚于此文件加载，可安全覆盖。 */
+
+/* 表单元素：清掉 UA 的边框/外观，视觉边框一律由设计层的
+   box-shadow 发丝线提供——杜绝任何原生边框漏网（含无 type 的裸 input） */
+button,
+input,
+optgroup,
+select,
+textarea {
+  margin: 0;
+  font: inherit;
+  border: 0 solid;
+}
+
+/* 数字输入的步进箭头保持原生（工具场景有用），但继承颜色 */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  opacity: 0.35;
+}
+
+/* 拖宽手柄与 resize 区域不参与选中 */
+label,
+button {
+  user-select: none;
+}

@@ -1,0 +1,86 @@
+{
+  "name": "glbforge",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "repository": "github:SilveryFlow/GLBForge",
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-strip-types --test tests/model-data.test.mjs",
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "lint": "oxlint .",
+    "lint:check": "eslint .",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "stylelint": "stylelint \"src/**/*.{vue,css}\" --fix",
+    "stylelint:check": "stylelint \"src/**/*.{vue,css}\"",
+    "spell": "cspell \"**/*.{js,ts,mjs,vue,html,md,json}\"",
+    "commit": "git-cz",
+    "prepare": "husky",
+    "lint:fix": "oxlint --fix ."
+  },
+  "dependencies": {
+    "@gltf-transform/core": "^4.5.0",
+    "@gltf-transform/extensions": "^4.5.0",
+    "@gltf-transform/functions": "^4.5.0",
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-fs": "^2.5.2",
+    "@tauri-apps/plugin-opener": "^2",
+    "draco3dgltf": "^1.5.7",
+    "meshoptimizer": "^1.2.0",
+    "three": "^0.185.1",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.5.3",
+    "@commitlint/config-conventional": "^20.5.3",
+    "@csstools/normalize.css": "^12.1.1",
+    "@tauri-apps/cli": "^2",
+    "@types/three": "^0.185.4",
+    "@vitejs/plugin-vue": "^6.0.7",
+    "commitizen": "^4.3.2",
+    "cspell": "^9.8.0",
+    "cz-git": "^1.14.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.5.0",
+    "oxfmt": "^0.67.0",
+    "oxlint": "^1.82.0",
+    "postcss-html": "^2.0.0",
+    "postcss-scss": "^4.0.9",
+    "sass-embedded": "^1.104.0",
+    "stylelint": "^17.15.0",
+    "stylelint-config-recess-order": "^7.8.0",
+    "stylelint-config-recommended": "^18.0.0",
+    "stylelint-config-recommended-scss": "^17.0.1",
+    "stylelint-config-recommended-vue": "^2.0.0",
+    "stylelint-order": "^8.1.1",
+    "typescript": "~6.0.3",
+    "unocss": "^66.10.0",
+    "vite": "^8.0.16",
+    "vue-tsc": "^3.3.5"
+  },
+  "lint-staged": {
+    "*.{js,mjs,cjs,ts,tsx,vue}": [
+      "oxlint --fix",
+      "oxfmt"
+    ],
+    "*.{css,vue}": [
+      "stylelint --fix"
+    ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "node_modules/cz-git"
+    }
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.3.4",
+      "onFail": "download"
+    }
+  }
+}
