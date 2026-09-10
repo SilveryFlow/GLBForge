@@ -404,6 +404,10 @@ export async function readLogs(): Promise<string[]> {
   return invoke("read_logs");
 }
 
+export async function clearLogs(): Promise<void> {
+  return invoke("clear_logs");
+}
+
 export async function readBytes(path: string): Promise<ArrayBuffer> {
   const data = await readFile(path);
   return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer;

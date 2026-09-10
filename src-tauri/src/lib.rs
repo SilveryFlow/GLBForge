@@ -158,6 +158,8 @@ async fn run_tool(
     .map_err(|e| format!("任务失败: {e}"))?
 }
 
+static LOG_LOCK: Mutex<()> = Mutex::new(());
+
 fn log_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     let dir = app
         .path()
@@ -170,6 +172,7 @@ fn log_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
 #[tauri::command]
 fn append_log(app: tauri::AppHandle, entry: String) -> Result<(), String> {
     use std::io::Write;
+    let _guard = LOG_LOCK.lock().map_err(|e| format!("log lock: {e}"))?;
     let path = log_path(&app)?;
     let mut f = fs::OpenOptions::new()
         .create(true)
@@ -181,9 +184,20 @@ fn append_log(app: tauri::AppHandle, entry: String) -> Result<(), String> {
 
 #[tauri::command]
 fn read_logs(app: tauri::AppHandle) -> Result<Vec<String>, String> {
+    let _guard = LOG_LOCK.lock().map_err(|e| format!("log lock: {e}"))?;
     let path = log_path(&app)?;
-    let content = fs::read_to_string(path).unwrap_or_default();
+    let content = match fs::read_to_string(path) {
+        Ok(content) => content,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => String::new(),
+        Err(e) => return Err(format!("read log: {e}")),
+    };
     Ok(content.lines().filter(|l| !l.is_empty()).map(String::from).collect())
+}
+
+#[tauri::command]
+fn clear_logs(app: tauri::AppHandle) -> Result<(), String> {
+    let _guard = LOG_LOCK.lock().map_err(|e| format!("log lock: {e}"))?;
+    fs::write(log_path(&app)?, b"").map_err(|e| format!("clear log: {e}"))
 }
 
 #[tauri::command]
@@ -211,6 +225,7 @@ pub fn run() {
             cancel_job,
             append_log,
             read_logs,
+            clear_logs,
             open_path
         ])
         .run(tauri::generate_context!())

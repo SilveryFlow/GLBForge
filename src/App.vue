@@ -11,6 +11,9 @@ import MarkView from "./views/MarkView.vue";
 import LogsView from "./views/LogsView.vue";
 import SettingsView from "./views/SettingsView.vue";
 import { loadSettings, initSettingsPersistence } from "./lib/settings";
+import { useWindowFullscreen } from "./composables/useWindowFullscreen";
+
+const { fullscreenError } = useWindowFullscreen();
 
 const tabs = [
   { key: "compress", label: "压缩" },
@@ -55,6 +58,7 @@ onUnmounted(() => unlisten?.());
       <h1>GLBForge</h1>
       <span class="sub">glTF 压缩 · 转换 · 诊断 · 标记 — Meshopt / Draco / KTX2，完全离线</span>
     </header>
+    <p v-if="fullscreenError" class="window-error" role="alert">{{ fullscreenError }}</p>
     <nav>
       <button
         v-for="t in tabs"
@@ -86,6 +90,10 @@ onUnmounted(() => unlisten?.());
   gap: 12px;
   height: 100vh;
   padding: 16px 20px;
+}
+.window-error {
+  margin: 0;
+  color: var(--color-status-danger);
 }
 header {
   display: flex;

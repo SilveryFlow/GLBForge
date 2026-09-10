@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onActivated, ref } from "vue";
 import { appDataDir, join } from "@tauri-apps/api/path";
-import { fmtBytes, readLogs, saveBytes } from "../lib/api";
+import { clearLogs, fmtBytes, readLogs, saveBytes } from "../lib/api";
 
 interface LogRow {
   time: string;
@@ -16,10 +16,18 @@ interface LogRow {
 
 const rows = ref<LogRow[]>([]);
 const error = ref("");
+const message = ref("");
+const busy = ref(false);
+const confirming = ref(false);
 
-onMounted(refresh);
+onActivated(refresh);
 
 async function refresh() {
+  if (busy.value) return;
+  busy.value = true;
+  error.value = "";
+  message.value = "";
+  confirming.value = false;
   try {
     rows.value = (await readLogs())
       .slice()
@@ -28,26 +36,65 @@ async function refresh() {
       .filter((r) => r.time);
   } catch (e) {
     error.value = String(e);
+  } finally {
+    busy.value = false;
+  }
+}
+
+async function clearAll() {
+  if (busy.value) return;
+  busy.value = true;
+  error.value = "";
+  message.value = "";
+  try {
+    await clearLogs();
+    rows.value = [];
+    confirming.value = false;
+    message.value = "日志已清空";
+  } catch (e) {
+    error.value = `清空失败：${String(e)}`;
+  } finally {
+    busy.value = false;
   }
 }
 
 async function exportAll() {
-  if (!rows.value.length) return;
-  const text = rows.value.map((r) => JSON.stringify(r)).join("\n");
-  const path = await join(await appDataDir(), `logs-export-${Date.now()}.jsonl`);
-  await saveBytes(path, new TextEncoder().encode(text));
-  error.value = `已导出 → ${path}`;
+  if (!rows.value.length || busy.value) return;
+  busy.value = true;
+  error.value = "";
+  message.value = "";
+  try {
+    const text = rows.value.map((r) => JSON.stringify(r)).join("\n");
+    const path = await join(await appDataDir(), `logs-export-${Date.now()}.jsonl`);
+    await saveBytes(path, new TextEncoder().encode(text));
+    message.value = `已导出 → ${path}`;
+  } catch (e) {
+    error.value = `导出失败：${String(e)}`;
+  } finally {
+    busy.value = false;
+  }
 }
 </script>
 
 <template>
-  <div class="view">
+  <div class="view workbench">
     <div class="bar">
-      <button @click="refresh">刷新</button>
-      <button :disabled="!rows.length" @click="exportAll">导出</button>
+      <button class="ui-button" :disabled="busy" @click="refresh">刷新</button>
+      <button class="ui-button" :disabled="busy || !rows.length" @click="exportAll">导出</button>
+      <button class="ui-button" :disabled="busy || !rows.length" @click="confirming = true">
+        清空日志
+      </button>
       <span class="hint">共 {{ rows.length }} 条操作记录</span>
     </div>
-    <p v-if="error" class="msg">{{ error }}</p>
+    <div v-if="confirming" class="confirm" role="group" aria-label="确认清空日志">
+      <span>清空全部操作记录？此操作无法撤销，模型文件不受影响。</span>
+      <button class="ui-button danger" :disabled="busy" @click="clearAll">
+        {{ busy ? "正在清空…" : "确认清空" }}
+      </button>
+      <button class="ui-button" :disabled="busy" @click="confirming = false">取消</button>
+    </div>
+    <p v-if="error" class="msg error" role="alert">{{ error }}</p>
+    <p v-if="message" class="msg" role="status">{{ message }}</p>
     <div class="tablewrap">
       <table v-if="rows.length">
         <thead>
@@ -91,6 +138,22 @@ async function exportAll() {
   display: flex;
   gap: 10px;
   align-items: center;
+}
+.confirm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3);
+  background: var(--color-bg-card);
+  border-radius: var(--radius-control);
+}
+.workbench .ui-button.danger {
+  color: var(--color-text-on-brand);
+  background: var(--color-status-danger);
+}
+.msg.error {
+  color: var(--color-status-danger);
 }
 button {
   padding: 4px 12px;

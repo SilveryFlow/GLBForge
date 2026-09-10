@@ -1,0 +1,24 @@
+{
+  "git": {
+    "requireBranch": "main",
+    "commitMessage": "chore: 发布 v${version}",
+    "tagName": "v${version}",
+    "push": true
+  },
+  "npm": false,
+  "github": { "release": false },
+  "plugins": {
+    "@release-it/bumper": {
+      "in": "package.json",
+      "out": "package.json"
+    },
+    "@release-it/conventional-changelog": {
+      "preset": { "name": "conventionalcommits" },
+      "infile": "CHANGELOG.md"
+    }
+  },
+  "hooks": {
+    "before:init": ["pnpm release:check", "pnpm test", "pnpm build"],
+    "after:bump": "node scripts/release-version.mjs ${version}"
+  }
+}

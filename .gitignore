@@ -35,3 +35,4 @@ scripts/m*.txt
 *.pfx
 scripts/install-vs-to-d.ps1
 scripts/*.glb
+release-notes.md
